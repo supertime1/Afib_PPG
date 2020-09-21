@@ -85,6 +85,9 @@ def preprocessing(signals, labels):
     signals = [scipy.signal.resample(i, 3750) for i in signals]
     signals = [np.expand_dims(i, axis=1) for i in signals]
     labels = tf.keras.utils.to_categorical(labels, num_classes=3)
+
+    signals = np.array(signals)
+    labels = np.array(labels)
     return signals, labels
 
 
@@ -112,3 +115,14 @@ def split_shuffle_dataset(signals, labels, train_ratio, seed=10):
     test_labels = labels[train_size:]
 
     return train_dataset, train_labels, test_dataset, test_labels
+
+
+def count_labels(labels):
+    nsr = sum(1 for i in labels if np.argmax(i) == 0)
+    af = sum(1 for i in labels if np.argmax(i) == 1)
+    others = sum(1 for i in labels if np.argmax(i) == 2)
+    print('There are {} NSR labels'.format(nsr))
+    print('There are {} AF labels'.format(af))
+    print('There are {} Other Arrhythmia labels'.format(others))
+
+    return None
