@@ -74,7 +74,7 @@ def generate_seg_data(raw_signals, raw_labels, seg_len):
     return signals, labels
 
 
-def preprocessing(signals, labels):
+def preprocessing(signals, labels, timedistributed=False):
     """
 
     :param signals: output segmented signals from generate_seg_data
@@ -84,6 +84,8 @@ def preprocessing(signals, labels):
     signals = [sklearn.preprocessing.robust_scale(i) for i in signals]
     signals = [scipy.signal.resample(i, 3750) for i in signals]
     signals = [np.expand_dims(i, axis=1) for i in signals]
+    if timedistributed:
+        signals = [np.reshape(i, (3, int(3750/3), 1)) for i in signals]
     labels = tf.keras.utils.to_categorical(labels, num_classes=3)
 
     signals = np.array(signals)
