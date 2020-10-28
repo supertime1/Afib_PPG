@@ -127,4 +127,15 @@ def count_labels(labels):
     print('There are {} AF labels'.format(af))
     print('There are {} Other Arrhythmia labels'.format(others))
 
-    return None
+    return nsr, af, others
+
+def class_weights(labels):
+    nsr, af, others = count_labels(labels)
+    unit = 1/(1/nsr + 1/af + 1/others)
+    nsr_ratio = float(unit / nsr)
+    af_ratio = float(unit / af)
+    others_ratio = float(unit / others)
+    CLASS_WEIGTHS = {0: nsr_ratio,
+                     1: af_ratio,
+                     2: others_ratio}
+    return CLASS_WEIGTHS
