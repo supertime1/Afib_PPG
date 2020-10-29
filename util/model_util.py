@@ -11,117 +11,45 @@ from tensorflow.keras.layers import Conv1D, BatchNormalization, Input, Add, Acti
 
 from tensorflow.keras.initializers import glorot_uniform
 
-cnn = tf.keras.Sequential([
-    # 1st Conv1D
-    tf.keras.layers.Conv1D(8, 1, strides=1,
-                           activation='relu', input_shape=(3750, 1)),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling1D(pool_size=2, strides=2),
-    tf.keras.layers.Dropout(0.2),
-    # 2nd Conv1D
-    tf.keras.layers.Conv1D(16, 3, strides=1,
-                           activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling1D(pool_size=2, strides=2),
-    tf.keras.layers.Dropout(0.2),
-    # 3rd Conv1D
-    tf.keras.layers.Conv1D(32, 3, strides=1,
-                           activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling1D(pool_size=2, strides=2),
-    tf.keras.layers.Dropout(0.2),
-    # 4th Conv1D
-    tf.keras.layers.Conv1D(64, 3, strides=1,
-                           activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling1D(pool_size=2, strides=2),
-    tf.keras.layers.Dropout(0.2),
-    # 5th Conv1D
-    tf.keras.layers.Conv1D(16, 1, strides=1,
-                           activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    # Full connection layer
-    tf.keras.layers.Flatten(),
+def cnn_lstm(input_shape=(3,1250,1), classes=3):
 
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(3, activation='softmax')
-])
+    cnn = tf.keras.Sequential([
+        # 1st Conv1D
+        Conv1D(8, 1, strides=1, activation='relu', input_shape=(1250, 1)),
+        BatchNormalization(),
+        MaxPooling1D(pool_size=2, strides=2),
+        Dropout(0.2),
+        # 2nd Conv1D
+        Conv1D(16, 3, strides=1, activation='relu'),
+        BatchNormalization(),
+        MaxPooling1D(pool_size=2, strides=2),
+        Dropout(0.2),
+        # 3rd Conv1D
+        Conv1D(32, 3, strides=1, activation='relu'),
+        BatchNormalization(),
+        MaxPooling1D(pool_size=2, strides=2),
+        Dropout(0.2),
+        # 4th Conv1D
+        Conv1D(64, 3, strides=1, activation='relu'),
+        BatchNormalization(),
+        MaxPooling1D(pool_size=2, strides=2),
+        Dropout(0.2),
+        # 5th Conv1D
+        Conv1D(16, 1, strides=1, activation='relu'),
+        BatchNormalization(),
+        # Full connection layer
+        Flatten()
+    ])
 
+    X_input = Input(shape=input_shape)
+    X = TimeDistributed(cnn)(X_input)
+    X = Bidirectional(LSTM(32, return_sequences=True))(X)
+    X = Bidirectional(LSTM(16))(X)
+    X = Dense(classes, activation='softmax')(X)
 
-class Simple_CNN(tf.keras.layers.Layer):
-    def __init__(self, input_shape):
-        super(Simple_CNN, self).__init__()
+    model = Model(inputs=[X_input], outputs=X)
 
-        self.convA = TimeDistributed(Conv1D(8, 1, strides=1, activation='relu'), input_shape=input_shape)
-        self.batchA = TimeDistributed(BatchNormalization())
-        self.maxpoolA = TimeDistributed(MaxPooling1D(pool_size=2, strides=2))
-        self.dropA = TimeDistributed(Dropout(0.2))
-
-        self.convB = TimeDistributed(Conv1D(16, 3, strides=1, activation='relu'))
-        self.batchB = TimeDistributed(BatchNormalization())
-        self.maxpoolB = TimeDistributed(MaxPooling1D(pool_size=2, strides=2))
-        self.dropB = TimeDistributed(Dropout(0.2))
-
-        self.convC = TimeDistributed(Conv1D(32, 3, strides=1, activation='relu'))
-        self.batchC = TimeDistributed(BatchNormalization())
-        self.maxpoolC = TimeDistributed(MaxPooling1D(pool_size=2, strides=2))
-        self.dropC = TimeDistributed(Dropout(0.2))
-
-        self.convD = TimeDistributed(Conv1D(64, 3, strides=1, activation='relu'))
-        self.batchD = TimeDistributed(BatchNormalization())
-        self.maxpoolD = TimeDistributed(MaxPooling1D(pool_size=2, strides=2))
-        self.dropD = TimeDistributed(Dropout(0.2))
-
-        self.convE = TimeDistributed(Conv1D(16, 1, strides=1, activation='relu'))
-        self.batch_normE = TimeDistributed(BatchNormalization())
-        self.flatE = TimeDistributed(Flatten())
-
-    def call(self, inputs):
-        x = self.convA(inputs)
-        x = self.batchA(x)
-        x = self.maxpoolA(x)
-        x = self.dropA(x)
-
-        x = self.convB(x)
-        x = self.batchB(x)
-        x = self.maxpoolB(x)
-        x = self.dropB(x)
-
-        x = self.convC(x)
-        x = self.batchC(x)
-        x = self.maxpoolC(x)
-        x = self.dropC(x)
-
-        x = self.convD(x)
-        x = self.batchD(x)
-        x = self.maxpoolD(x)
-        x = self.dropD(x)
-
-        x = self.convE(x)
-        x = self.batch_normE(x)
-        x = self.flatE(x)
-
-        return x
-
-
-class CNN_LSTM(Model):
-    def __init__(self, input_shape, classes):
-        super(CNN_LSTM, self).__init__()
-        self.cnn = Simple_CNN(input_shape=input_shape)
-        self.bi_lstmA = Bidirectional(LSTM(32, return_sequences=True))
-        self.bi_lstmB = Bidirectional(LSTM(16))
-        self.dense = Dense(classes, activation='softmax')
-
-    def call(self, inputs):
-        x = self.cnn(inputs)
-        x = self.bi_lstmA(x)
-        x = self.bi_lstmB(x)
-        x = self.dense(x)
-
-        return x
-
+    return model
 
 def identity_block_18(X, f, filters, stage, block):
     # defining name basis
@@ -188,7 +116,7 @@ def convolutional_block_18(X, f, filters, stage, block, s=2):
     return X
 
 
-def ResNet18(input_shape=(750, 1), classes=1, as_model=False):
+def resnet18(input_shape=(750, 1), classes=1, as_model=False):
     # Define the input as a tensor with shape input_shape
     X_input = Input(input_shape)
 
@@ -232,9 +160,9 @@ def ResNet18(input_shape=(750, 1), classes=1, as_model=False):
     return model
 
 
-def Resnet18_LSTM(Tx, n_a, n_s, input_image_size, classes=1):
+def resnet18_lstm(Tx, n_a, n_s, input_image_size, classes=3):
     # define resnet
-    resnet = ResNet18(input_shape=(input_image_size, 1), classes=classes, as_model=False)
+    resnet = resnet18(input_shape=(input_image_size, 1), classes=classes, as_model=False)
 
     X_input = Input(shape=(Tx, input_image_size, 1))
 
@@ -308,9 +236,9 @@ def plot_to_image(figure):
 
 
 def decay(epoch):
-    if epoch < 100:
+    if epoch < 20:
         return 1e-3
-    elif 100 <= epoch < 200:
+    elif 20 <= epoch < 100:
         return 1e-4
     else:
         return 1e-5

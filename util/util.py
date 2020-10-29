@@ -37,11 +37,11 @@ def data_mining(file_path):
             if temp_label == '~':
                 continue
             elif temp_label == 'N':
-                temp_label = '0'
+                temp_label = 0
             elif temp_label == 'A':
-                temp_label = '1'
+                temp_label = 1
             elif temp_label == 'O':
-                temp_label = '2'
+                temp_label = 2
 
             record = wfdb.rdrecord(name)
             raw_signals.append(record.p_signal)
@@ -81,12 +81,12 @@ def preprocessing(signals, labels, timedistributed=False):
     :param labels: corresponding labels of segmented signals
     :return: rescaled, resampled and reshaped dataset to feed into NN model
     """
-    signals = [sklearn.preprocessing.robust_scale(i) for i in signals]
+    signals = [sklearn.preprocessing.minmax_scale(i) for i in signals]
     signals = [scipy.signal.resample(i, 3750) for i in signals]
     signals = [np.expand_dims(i, axis=1) for i in signals]
     if timedistributed:
         signals = [np.reshape(i, (3, int(3750/3), 1)) for i in signals]
-    labels = tf.keras.utils.to_categorical(labels, num_classes=3)
+    #labels = tf.keras.utils.to_categorical(labels, num_classes=3)
 
     signals = np.array(signals)
     labels = np.array(labels)
@@ -120,9 +120,9 @@ def split_shuffle_dataset(signals, labels, train_ratio, seed=10):
 
 
 def count_labels(labels):
-    nsr = sum(1 for i in labels if np.argmax(i) == 0)
-    af = sum(1 for i in labels if np.argmax(i) == 1)
-    others = sum(1 for i in labels if np.argmax(i) == 2)
+    nsr = sum(1 for i in labels if i == 0)
+    af = sum(1 for i in labels if i == 1)
+    others = sum(1 for i in labels if i == 2)
     print('There are {} NSR labels'.format(nsr))
     print('There are {} AF labels'.format(af))
     print('There are {} Other Arrhythmia labels'.format(others))
