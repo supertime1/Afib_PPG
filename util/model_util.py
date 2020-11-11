@@ -236,9 +236,9 @@ def plot_to_image(figure):
 
 
 def decay(epoch):
-    if epoch < 20:
+    if epoch < 100:
         return 1e-3
-    elif 20 <= epoch < 100:
+    elif 100 <= epoch < 200:
         return 1e-4
     else:
         return 1e-5
